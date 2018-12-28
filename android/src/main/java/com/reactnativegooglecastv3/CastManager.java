@@ -1,6 +1,8 @@
 package com.reactnativegooglecastv3;
 
+
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
@@ -9,6 +11,7 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.gms.cast.Cast;
 import com.google.android.gms.cast.CastDevice;
+import com.google.android.gms.cast.MediaLoadOptions;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.CastStateListener;
@@ -23,6 +26,11 @@ import static com.google.android.gms.cast.framework.CastState.CONNECTING;
 import static com.reactnativegooglecastv3.GoogleCastPackage.NAMESPACE;
 import static com.reactnativegooglecastv3.GoogleCastPackage.TAG;
 import static com.reactnativegooglecastv3.GoogleCastPackage.metadata;
+
+import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.cast.MediaMetadata;
+import com.google.android.gms.cast.framework.CastSession;
+import com.google.android.gms.common.images.WebImage;
 
 public class CastManager {
     static CastManager instance;
@@ -59,6 +67,27 @@ public class CastManager {
 
     public static void init(Context ctx) {
         instance = new CastManager(ctx);
+    }
+
+    public void load(String url, String title, String imageUri, int duration) {
+        Video video = new Video(url,title,imageUri,duration);
+        sessionManager.getCurrentCastSession().getRemoteMediaClient().load(buildMediaInfo(video));
+    }
+
+    private MediaMetadata buildMetadata(Video video){
+        MediaMetadata movieMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
+        movieMetadata.putString(MediaMetadata.KEY_TITLE, video.getTitle());
+        movieMetadata.addImage(new WebImage(Uri.parse(video.getImageUri())));
+        return movieMetadata;
+    }
+
+    private MediaInfo buildMediaInfo(Video video){
+        return new MediaInfo.Builder(video.getUrl())
+            .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
+            .setContentType("application/x-mpegurl")
+            .setMetadata(buildMetadata(video))
+            .setStreamDuration(video.getDuration())
+            .build();
     }
 
     public void sendMessage(String namespace, String message) {
@@ -133,6 +162,35 @@ public class CastManager {
                     .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                     .emit("googleCastMessage", map);
 
+        }
+    }
+
+    public class Video {
+        private String url, title, imageUri;
+        private int duration;
+
+        public Video(String url, String title,  String imageUri, int duration) {
+            this.url = url;
+            this.title = title;
+            this.imageUri = imageUri;
+            this.duration = duration;
+
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public String getImageUri() {
+            return imageUri;
+        }
+
+        public int getDuration() {
+            return duration;
         }
     }
 

@@ -50,6 +50,23 @@ public class CastModule extends ReactContextBaseJavaModule {
         });
     }
 
+    @ReactMethod
+    public void load(final String url, final String title, final String imageUri, final Integer duration,
+        final Promise promise) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    CastManager.instance.load(url, title, imageUri, duration);
+                    promise.resolve(null);
+                } catch (Exception e) {
+                    promise.reject(e);
+                }
+            }
+        });
+
+    }
+
     @ReactMethod @SuppressWarnings("unused")
     public void getCurrentDevice(Promise promise) {
         CastDevice d = CastManager.instance.castDevice;

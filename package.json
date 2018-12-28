@@ -1,13 +1,13 @@
 {
-  "name": "react-native-googlecast-v3",
-  "version": "0.2.0",
+  "name": "vp-google-cast-v3",
+  "version": "0.1",
   "license": "MIT",
   "private": false,
   "main": "googlecast-v3.js",
-  "author": "Mikko Koponen <koponen@iki.fi> (https://github.com/mtkopone)",
+  "author": "Phong Nguyen (https://github.com/phongnguyen93)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mtkopone/react-native-googlecast-v3"
+    "url": "https://github.com/phongnguyen93/react-native-googlecast-v3"
   },
   "devDependencies": {
     "np": "^3.0.4"
