@@ -1,5 +1,3 @@
-# react-native-googlecast-v3
-
 Google Cast SDK v3 support for React-Native
 
 ## CAVEATS!
@@ -8,7 +6,7 @@ Google Cast SDK v3 support for React-Native
 
 # Installation
 
-    npm install --save https://github.com/mtkopone/react-native-googlecast-v3
+    npm install --save vp-google-cast
     react-native link
 
 Or, you know, the same in yarn if that's what we are all using this week...
@@ -18,10 +16,10 @@ Or, you know, the same in yarn if that's what we are all using this week...
 Add required dependencies to `./android/app/build.gradle`:
 
     dependencies {
-      compile project(':react-native-googlecast-v3')
-      compile "com.android.support:appcompat-v7:23.0.1"
-      compile 'com.android.support:mediarouter-v7:23.0.1'
-      compile "com.google.android.gms:play-services-cast-framework:11.8.0"
+      implementation project(':vp-google-cast')
+      implementation "com.android.support:appcompat-v7:23.0.1"
+      implementation 'com.android.support:mediarouter-v7:23.0.1'
+      implementation "com.google.android.gms:play-services-cast-framework:11.8.0"
       ... // And so on
     }
 
@@ -54,7 +52,7 @@ override onCreate, and add CastManager initialization:
 
 #### Import
 
-    import CastButton, { GoogleCastV3 } from 'react-native-googlecast-v3'
+    import CastButton, { GoogleCastV3 } from 'vp-google-cast'
 
     GoogleCastV3.appId // is your castAppId
     GoogleCastV3.namespace // is your castNamespace
@@ -100,3 +98,19 @@ Using some other namespace:
     GoogleCastV3.addCastMessageListener(message => {
       // message is: { namespace: 'urn:x-cast:your.own.namespace', message: String }
     })
+
+#### Load media
+
+    GoogleCastV3.load({
+            url:      PropType.string,
+            title:    PropType.string,
+            image:    PropType.string,
+            duration: PropType.number
+          })
+            .then(result => {
+              console.log("LOAD_RESULT", result);
+            })
+            .catch(error => {
+              console.log("LOAD_ERROR", error);
+            })
+
