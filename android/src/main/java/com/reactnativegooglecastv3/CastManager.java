@@ -1,24 +1,32 @@
 package com.reactnativegooglecastv3;
 
-
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
+import android.widget.Toast;
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.gms.cast.Cast;
 import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.cast.MediaLoadOptions;
+import com.google.android.gms.cast.MediaQueueItem;
+import com.google.android.gms.cast.MediaStatus;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.CastStateListener;
 import com.google.android.gms.cast.framework.SessionManager;
+import com.google.android.gms.cast.framework.media.RemoteMediaClient;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.ResultCallbacks;
+import com.google.android.gms.common.api.Status;
 import java.io.IOException;
 
 import static com.google.android.gms.cast.framework.CastState.CONNECTED;
@@ -31,6 +39,8 @@ import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.common.images.WebImage;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CastManager {
     static CastManager instance;
@@ -69,30 +79,43 @@ public class CastManager {
         instance = new CastManager(ctx);
     }
 
-    public void load(String url, String title, String imageUri, int duration) {
-        Video video = new Video(url,title,imageUri,duration);
-        sessionManager.getCurrentCastSession().getRemoteMediaClient().load(buildMediaInfo(video));
+    public void load(String url, String title, String imageUri, int duration, final Promise promise) {
+        Video video = new Video(url, title, imageUri, duration);
+        List<MediaQueueItem> queueItems = new ArrayList<>();
+        MediaQueueItem queueItem = new MediaQueueItem.Builder(buildMediaInfo(video)).setAutoplay(true).setPreloadTime(5)
+                .build();
+        queueItems.add(queueItem);
+        sessionManager.getCurrentCastSession().getRemoteMediaClient().queueLoad(
+                queueItems.toArray(new MediaQueueItem[queueItems.size()]), 0, MediaStatus.REPEAT_MODE_REPEAT_OFF,
+                duration * 1000, null).setResultCallback(
+            new ResultCallbacks<RemoteMediaClient.MediaChannelResult>() {
+                @Override public void onSuccess(
+                    @NonNull RemoteMediaClient.MediaChannelResult mediaChannelResult) {
+                     promise.resolve(true);
+                }
+
+                @Override public void onFailure(@NonNull Status status) {
+                    promise.resolve(false);
+                }
+            });
     }
 
-    private MediaMetadata buildMetadata(Video video){
+    private MediaMetadata buildMetadata(Video video) {
         MediaMetadata movieMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
         movieMetadata.putString(MediaMetadata.KEY_TITLE, video.getTitle());
         movieMetadata.addImage(new WebImage(Uri.parse(video.getImageUri())));
         return movieMetadata;
     }
 
-    private MediaInfo buildMediaInfo(Video video){
-        return new MediaInfo.Builder(video.getUrl())
-            .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
-            .setContentType("application/x-mpegurl")
-            .setMetadata(buildMetadata(video))
-            .setStreamDuration(video.getDuration())
-            .build();
+    private MediaInfo buildMediaInfo(Video video) {
+        return new MediaInfo.Builder(video.getUrl()).setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
+                .setContentType("application/x-mpegurl").setMetadata(buildMetadata(video)).build();
     }
 
     public void sendMessage(String namespace, String message) {
         CastSession session = sessionManager.getCurrentCastSession();
-        if (session == null) return;
+        if (session == null)
+            return;
         try {
             session.sendMessage(namespace, message);
         } catch (RuntimeException re) {
@@ -121,9 +144,9 @@ public class CastManager {
             } else {
                 castDevice = null;
             }
-            if (reactContext != null) reactContext
-                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                    .emit("googleCastStateChanged", state);
+            if (reactContext != null)
+                reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                        .emit("googleCastStateChanged", state);
         }
     }
 
@@ -141,9 +164,8 @@ public class CastManager {
         private void setMessageReceivedCallbacks(CastSession session) {
             try {
                 if (reactContext != null)
-                    session.setMessageReceivedCallbacks(
-                        metadata(NAMESPACE, "", reactContext),
-                        new CastMessageReceivedCallback());
+                    session.setMessageReceivedCallbacks(metadata(NAMESPACE, "", reactContext),
+                            new CastMessageReceivedCallback());
             } catch (IOException e) {
                 Log.e(TAG, "Cast channel creation failed: ", e);
             }
@@ -154,22 +176,22 @@ public class CastManager {
         @Override
         public void onMessageReceived(CastDevice castDevice, String namespace, String message) {
             Log.d(TAG, "onMessageReceived: " + namespace + " / " + message);
-            if (reactContext == null) return;
+            if (reactContext == null)
+                return;
             WritableMap map = Arguments.createMap();
             map.putString("namespace", namespace);
             map.putString("message", message);
-            reactContext
-                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                    .emit("googleCastMessage", map);
+            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("googleCastMessage",
+                    map);
 
         }
     }
 
     public class Video {
         private String url, title, imageUri;
-        private int duration;
+        private long duration;
 
-        public Video(String url, String title,  String imageUri, int duration) {
+        public Video(String url, String title, String imageUri, long duration) {
             this.url = url;
             this.title = title;
             this.imageUri = imageUri;
@@ -189,7 +211,7 @@ public class CastManager {
             return imageUri;
         }
 
-        public int getDuration() {
+        public long getDuration() {
             return duration;
         }
     }
