@@ -59,6 +59,6 @@ class CastButtonManager extends SimpleViewManager<MediaRouteButton> {
 
     @Override
     public void receiveCommand(MediaRouteButton view, int commandId, @Nullable ReadableArray args) {
-        if (commandId == 1) view.performClick();
+        if (commandId == 1) view.showDialog();
     }
 }
