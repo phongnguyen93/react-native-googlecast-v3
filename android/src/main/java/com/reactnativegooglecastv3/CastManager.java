@@ -79,8 +79,8 @@ public class CastManager {
         instance = new CastManager(ctx);
     }
 
-    public void load(String url, String title, String imageUri, int duration, final Promise promise) {
-        Video video = new Video(url, title, imageUri, duration);
+    public void load(String url, String title,String subtitle, String imageUri, int duration, final Promise promise) {
+        Video video = new Video(url, title,subtitle, imageUri, duration);
         List<MediaQueueItem> queueItems = new ArrayList<>();
         MediaQueueItem queueItem = new MediaQueueItem.Builder(buildMediaInfo(video)).setAutoplay(true).setPreloadTime(5)
                 .build();
@@ -103,6 +103,7 @@ public class CastManager {
     private MediaMetadata buildMetadata(Video video) {
         MediaMetadata movieMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
         movieMetadata.putString(MediaMetadata.KEY_TITLE, video.getTitle());
+        movieMetadata.putString(MediaMetadata.KEY_SUBTITLE,video.getSubtitle());
         movieMetadata.addImage(new WebImage(Uri.parse(video.getImageUri())));
         return movieMetadata;
     }
@@ -188,14 +189,15 @@ public class CastManager {
     }
 
     public class Video {
-        private String url, title, imageUri;
+        private String url, title, subtitle, imageUri;
         private long duration;
 
-        public Video(String url, String title, String imageUri, long duration) {
+        public Video(String url, String title, String subtitle, String imageUri, long duration) {
             this.url = url;
             this.title = title;
             this.imageUri = imageUri;
             this.duration = duration;
+            this.subtitle = subtitle;
 
         }
 
@@ -210,6 +212,8 @@ public class CastManager {
         public String getImageUri() {
             return imageUri;
         }
+
+        public String getSubtitle() {return subtitle}
 
         public long getDuration() {
             return duration;

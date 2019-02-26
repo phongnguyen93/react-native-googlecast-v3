@@ -34,6 +34,7 @@ const GoogleCastV3Handler = {
     return NativeGoogleCastV3.load(
       video.url,
       video.title,
+      video.subtitle,
       video.image,
       video.duration
     );

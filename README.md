@@ -1,8 +1,9 @@
 Google Cast SDK v3 support for React-Native
 
 ## CAVEATS!
-* Only Android at the moment, iOS to come.
-* Only supports talking to your custom receiver thru a custom channel at the moment, so the default use-case of playing some media is currently **NOT** supported. Sorry, but this is what I needed today.
+
+- Only Android at the moment, iOS to come.
+- Only supports talking to your custom receiver thru a custom channel at the moment, so the default use-case of playing some media is currently **NOT** supported. Sorry, but this is what I needed today.
 
 # Installation
 
@@ -102,6 +103,7 @@ Using some other namespace:
     GoogleCastV3.load({
             url:      PropType.string,
             title:    PropType.string,
+            subtitle: PropType.string,
             image:    PropType.string,
             duration: PropType.number
           })
@@ -111,4 +113,3 @@ Using some other namespace:
             .catch(error => {
               console.log("LOAD_ERROR", error);
             })
-

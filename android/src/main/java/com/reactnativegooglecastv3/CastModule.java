@@ -51,13 +51,13 @@ public class CastModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void load(final String url, final String title, final String imageUri, final Integer duration,
+    public void load(final String url, final String title,final  String subtitle, final String imageUri, final Integer duration,
         final Promise promise) {
         handler.post(new Runnable() {
             @Override
             public void run() {
                 try {
-                    CastManager.instance.load(url, title, imageUri, duration,promise);
+                    CastManager.instance.load(url, title, subtitle,imageUri, duration,promise);
                 } catch (Exception e) {
                     promise.reject(e);
                 }
