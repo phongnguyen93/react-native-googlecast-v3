@@ -213,7 +213,7 @@ public class CastManager {
             return imageUri;
         }
 
-        public String getSubtitle() {return subtitle}
+        public String getSubtitle() {return subtitle;}
 
         public long getDuration() {
             return duration;
