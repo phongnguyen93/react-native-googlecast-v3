@@ -25,19 +25,62 @@ const GoogleCastV3Handler = {
       "googleCastStateChanged",
       fn
     );
-    NativeGoogleCastV3.triggerStateChange();
     return subscription;
+  },
+  removeCastStateListener: fn => {
+    return DeviceEventEmitter.removeListener("googleCastStateChanged", fn);
   },
   addCastMessageListener: fn =>
     DeviceEventEmitter.addListener("googleCastMessage", fn),
+  removeCastMessageListener: fn =>
+    DeviceEventEmitter.removeListener("googleCastMessage", fn),
+  addCastProgressListener: fn => {
+    NativeGoogleCastV3.addCastProgressListener();
+    return DeviceEventEmitter.addListener("castProgress", fn);
+  },
+  removeCastProgressListener: fn => {
+    NativeGoogleCastV3.removeCastProgressListener();
+    return DeviceEventEmitter.removeListener("castProgress", fn);
+  },
   load: video => {
     return NativeGoogleCastV3.load(
       video.url,
       video.title,
       video.subtitle,
       video.image,
-      video.duration
+      video.duration,
+      video.customData
     );
+  },
+  startScan: fn => {
+    NativeGoogleCastV3.startScan();
+    return DeviceEventEmitter.addListener("mediaRouteChange", fn);
+  },
+  stopScan: fn => {
+    NativeGoogleCastV3.stopScan();
+    return DeviceEventEmitter.removeListener("mediaRouteChange", fn);
+  },
+  connectToDevice: deviceId => {
+    NativeGoogleCastV3.connectToDevice(deviceId);
+  },
+  togglePlayPause: () => {
+    NativeGoogleCastV3.togglePlayPause();
+  },
+  getQueueItemByIndex: index => NativeGoogleCastV3.getQueueItemByIndex(index),
+  queueNext: () => {
+    NativeGoogleCastV3.queueNext();
+  },
+  queuePrevious: () => {
+    NativeGoogleCastV3.queuePrevious();
+  },
+  getCurrentCastState: () => NativeGoogleCastV3.getCurrentCastState(),
+  getCurrentCastPlayerState: () =>
+    NativeGoogleCastV3.getCurrentCastPlayerState(),
+  seek: time => {
+    NativeGoogleCastV3.seek(time);
+  },
+  triggerUpdateCurrentState: () => {
+    NativeGoogleCastV3.triggerUpdateCurrentState();
   }
 };
 

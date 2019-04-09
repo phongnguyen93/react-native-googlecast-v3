@@ -3,16 +3,21 @@ package com.reactnativegooglecastv3;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.v7.media.MediaRouteSelector;
+import android.support.v7.media.MediaRouter;
 import android.util.Log;
 
 import android.widget.Toast;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.gms.cast.Cast;
 import com.google.android.gms.cast.CastDevice;
+import com.google.android.gms.cast.CastMediaControlIntent;
 import com.google.android.gms.cast.MediaLoadOptions;
 import com.google.android.gms.cast.MediaQueueItem;
 import com.google.android.gms.cast.MediaStatus;
@@ -31,6 +36,7 @@ import java.io.IOException;
 
 import static com.google.android.gms.cast.framework.CastState.CONNECTED;
 import static com.google.android.gms.cast.framework.CastState.CONNECTING;
+import static com.reactnativegooglecastv3.GoogleCastPackage.APP_ID;
 import static com.reactnativegooglecastv3.GoogleCastPackage.NAMESPACE;
 import static com.reactnativegooglecastv3.GoogleCastPackage.TAG;
 import static com.reactnativegooglecastv3.GoogleCastPackage.metadata;
@@ -51,6 +57,8 @@ public class CastManager {
     final CastStateListenerImpl castStateListener;
     ReactContext reactContext;
     CastDevice castDevice;
+    private MediaRouteSelector selector;
+    private MediaRouter mediaRouter;
 
     CastManager(Context parent) {
         this.parent = parent;
@@ -73,11 +81,59 @@ public class CastManager {
         this.castContext = castContext;
         this.sessionManager = sessionManager;
         this.castStateListener = castStateListener;
+        selector = new MediaRouteSelector.Builder().addControlCategory(
+            CastMediaControlIntent.categoryForCast(GoogleCastPackage.metadata(APP_ID, "", parent))).build();
+        mediaRouter = MediaRouter.getInstance(parent);
     }
 
     public static void init(Context ctx) {
         instance = new CastManager(ctx);
     }
+
+    public void getAvailableDevices(){
+        mediaRouter.addCallback(selector, new MediaRouter.Callback() {
+            @Override
+            public void onRouteAdded(MediaRouter router, MediaRouter.RouteInfo route) {
+                super.onRouteAdded(router, route);
+                if (reactContext != null)
+                    reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                        .emit("mediaRouteChange", getRoutes());
+
+
+            }
+
+            @Override
+            public void onRouteRemoved(MediaRouter router, MediaRouter.RouteInfo route) {
+                super.onRouteRemoved(router, route);
+                if (reactContext != null)
+                    reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                        .emit("mediaRouteChange", getRoutes());
+            }
+
+            @Override
+            public void onRouteChanged(MediaRouter router, MediaRouter.RouteInfo route) {
+                super.onRouteChanged(router, route);
+                if (reactContext != null)
+                    reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                        .emit("mediaRouteChange", getRoutes());
+            }
+        }, MediaRouter.CALLBACK_FLAG_PERFORM_ACTIVE_SCAN);
+    }
+
+    private WritableArray getRoutes() {
+        WritableArray writableArray = Arguments.createArray();
+        if(mediaRouter!= null ){
+            List<MediaRouter.RouteInfo> routeInfos =mediaRouter.getRoutes();
+            for(MediaRouter.RouteInfo info : routeInfos){
+                WritableMap map = Arguments.createMap();
+                map.putString("id",info.getId());
+                map.putString("name",info.getName());
+                writableArray.pushMap(map);
+            }
+        }
+        return writableArray;
+    }
+
 
     public void load(String url, String title,String subtitle, String imageUri, int duration, final Promise promise) {
         Video video = new Video(url, title,subtitle, imageUri, duration);
